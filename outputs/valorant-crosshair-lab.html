@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>无畏契约准星实验室 · 实时预览与分享码生成</title>
+<meta name="description" content="无畏契约（VALORANT）准星调校工具：实时预览内线、外线、中心点与轮廓，一键生成可导入游戏的准星分享码。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230b1218'/><path d='M16 5v9M16 18v9M5 16h9M18 16h9' stroke='%23ff4655' stroke-width='3'/></svg>">
+<style>
+/* ============ 基础变量与重置 ============ */
+:root{
+  --bg:#0a1016;
+  --surface:#121c24;
+  --surface-2:#16222c;
+  --surface-3:#1c2b36;
+  --border:#22323e;
+  --border-soft:#1a252e;
+  --text:#e8f0f6;
+  --muted:#8ea3b4;
+  --muted-2:#6c8090;
+  --accent:#ff4655;
+  --accent-2:#2fd6c6;
+  --accent-soft:rgba(255,70,85,.14);
+  --radius:14px;
+  --radius-sm:10px;
+  --shadow:0 20px 44px -26px rgba(0,0,0,.95);
+  --mono:ui-monospace,SFMono-Regular,"JetBrains Mono",Consolas,"Liberation Mono",monospace;
+  --sans:"Segoe UI","Microsoft YaHei","PingFang SC","Hiragino Sans GB",system-ui,-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--sans);font-size:16px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(900px 520px at 12% -8%, rgba(255,70,85,.10), transparent 62%),
+    radial-gradient(760px 460px at 92% -2%, rgba(47,214,198,.08), transparent 60%);
+}
+h1,h2,h3{line-height:1.28;margin:0;font-weight:700;letter-spacing:-.01em}
+h1{font-size:clamp(32px,5vw,58px);letter-spacing:-.025em}
+h2{font-size:clamp(22px,3vw,30px)}
+h3{font-size:15px}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+svg{display:block;max-width:100%}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.span-all{grid-column:1/-1}
+.mt-10{margin-top:10px}
+.mono{font-family:var(--mono)}
+
+/* ============ 顶部导航 ============ */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,16,22,.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border-soft);
+}
+.nav-inner{
+  max-width:1180px;margin:0 auto;padding:13px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em}
+.brand-dot{width:10px;height:10px;border-radius:3px;background:var(--accent);box-shadow:0 0 12px rgba(255,70,85,.85);flex:none}
+.tag{
+  font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.06em;
+  border:1px solid var(--border);border-radius:999px;padding:1px 9px;
+}
+.nav-links{display:flex;gap:2px;flex-wrap:wrap}
+.nav-links a{font-size:14px;color:var(--muted);padding:6px 11px;border-radius:8px;transition:.15s}
+.nav-links a:hover{color:var(--text);background:var(--surface-2)}
+
+/* ============ 首屏 ============ */
+.hero{padding:76px 0 44px}
+.eyebrow{
+  font-size:12px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--accent);font-weight:700;margin-bottom:16px;
+}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.lede{margin-top:22px;max-width:640px;color:var(--muted);font-size:17px}
+.hero-actions{margin-top:30px;display:flex;gap:12px;flex-wrap:wrap}
+.hero-facts{margin:46px 0 0;padding:0;list-style:none;display:flex;gap:12px;flex-wrap:wrap}
+.fact{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:12px 18px;font-size:13px;color:var(--muted);
+}
+.fact b{display:block;color:var(--text);font-size:15px;margin-bottom:2px}
+
+/* ============ 通用按钮 ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:42px;padding:0 18px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface-2);color:var(--text);font-family:inherit;
+  font-size:14px;font-weight:600;cursor:pointer;transition:.16s;white-space:nowrap;
+}
+.btn:hover{border-color:#33485b;background:var(--surface-3)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#ff5c69;border-color:#ff5c69}
+.btn-sm{height:34px;padding:0 13px;font-size:13px;border-radius:9px}
+
+/* ============ 区块 ============ */
+.section{padding:54px 0;scroll-margin-top:78px}
+.section-head{margin-bottom:26px;max-width:700px}
+.section-head p{margin-top:10px;color:var(--muted);font-size:15px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+
+/* ============ 设计器布局 ============ */
+.designer{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:22px;align-items:start}
+.preview{padding:14px}
+.preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px}
+.seg button{
+  height:28px;padding:0 11px;border:0;background:transparent;color:var(--muted);
+  font-family:inherit;font-size:12.5px;font-weight:600;border-radius:6px;cursor:pointer;transition:.15s;
+}
+.seg button:hover{color:var(--text)}
+.seg button.active{background:var(--surface-3);color:var(--text)}
+.stage{border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+.stage svg{width:100%;height:auto}
+.stage-foot{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.code-card{margin-top:12px;background:#080e13;border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px}
+.code-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.code-head span{font-size:12px;color:var(--muted);letter-spacing:.08em}
+.code-text{
+  font-family:var(--mono);font-size:12px;line-height:1.65;
+  color:#8ff0d8;word-break:break-all;
+}
+.share-row{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.share-link{
+  flex:1;min-width:180px;font-family:var(--mono);font-size:12px;color:var(--accent-2);
+  background:#0a1116;border:1px solid var(--border);border-radius:8px;
+  padding:8px 10px;word-break:break-all;
+}
+.rank-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:16px}
+.rank-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;display:flex;flex-direction:column;gap:10px;
+}
+.rank-head{display:flex;align-items:baseline;gap:10px}
+.rank-no{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  background:var(--accent-soft);border-radius:6px;padding:1px 7px;
+}
+.rank-name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-stat{font-size:12.5px;color:var(--muted-2);font-family:var(--mono)}
+
+/* ============ 控制面板 ============ */
+.controls{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 16px;background:var(--surface-2);border-bottom:1px solid var(--border);
+}
+.panel-head h3{letter-spacing:.05em}
+.panel-body{padding:15px 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 20px}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.field-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.field label{font-size:13px;color:var(--muted)}
+.val{font-family:var(--mono);font-size:12.5px;color:var(--accent-2)}
+input[type=range]{width:100%;height:20px;accent-color:var(--accent);cursor:pointer}
+input[type=range]:disabled{opacity:.3;cursor:not-allowed}
+.hint{font-size:12.5px;color:var(--muted-2);line-height:1.6}
+
+/* 开关 */
+.switch{position:relative;display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none;font-size:13px}
+.switch input{position:absolute;opacity:0;width:0;height:0}
+.switch .track{
+  width:38px;height:21px;border-radius:999px;background:var(--surface-3);
+  border:1px solid var(--border);position:relative;transition:.18s;flex:none;
+}
+.switch .track::after{
+  content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;
+  border-radius:50%;background:var(--muted);transition:.18s;
+}
+.switch input:checked+.track{background:rgba(255,70,85,.32);border-color:var(--accent)}
+.switch input:checked+.track::after{left:19px;background:var(--accent)}
+.switch input:focus-visible+.track{outline:2px solid var(--accent-2);outline-offset:2px}
+.switch input:disabled+.track{opacity:.4;cursor:not-allowed}
+.switch input:disabled~.switch-label{opacity:.45}
+.switch-label{color:var(--muted)}
+
+/* 色板 */
+.swatches{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.swatch{
+  width:30px;height:30px;border-radius:9px;border:1px solid rgba(255,255,255,.16);
+  cursor:pointer;padding:0;transition:.15s;
+}
+.swatch:hover{transform:translateY(-2px)}
+.swatch.active{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.color-custom{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);cursor:pointer}
+.color-custom input[type=color]{
+  width:40px;height:30px;padding:0;border:1px solid var(--border);
+  border-radius:9px;background:transparent;cursor:pointer;
+}
+
+/* ============ 预设 ============ */
+.presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:16px}
+.preset{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px;display:flex;flex-direction:column;gap:12px;transition:.18s;
+}
+.preset:hover{border-color:#33485b;transform:translateY(-2px)}
+.preset-thumb{
+  background:#0d1720;border:1px solid var(--border);border-radius:var(--radius-sm);
+  overflow:hidden;display:flex;justify-content:center;padding:6px;
+}
+.preset-thumb svg{width:100%;max-width:186px;height:auto}
+.preset p{font-size:13px;color:var(--muted);margin-top:6px}
+.preset-code{
+  font-family:var(--mono);font-size:11px;line-height:1.55;color:var(--muted-2);
+  background:#080e13;border:1px solid var(--border-soft);border-radius:8px;
+  padding:8px 10px;max-height:58px;overflow:hidden;word-break:break-all;
+}
+.preset-foot{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
+.preset-toolbar{
+  display:flex;flex-wrap:wrap;gap:14px;align-items:center;
+  justify-content:space-between;margin-bottom:14px;
+}
+.preset-filter{display:flex;flex-wrap:wrap;gap:8px}
+.preset-search input{
+  height:38px;min-width:230px;padding:0 14px;border-radius:10px;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font-family:inherit;font-size:13.5px;transition:.16s;
+}
+.preset-search input::placeholder{color:var(--muted-2)}
+.preset-search input:focus{outline:none;border-color:var(--accent-2)}
+.preset-meta{display:flex;gap:14px;align-items:center;justify-content:space-between;color:var(--muted-2);font-size:13px;margin-bottom:14px}
+.preset-more{display:flex;justify-content:center;margin-top:24px}
+.preset-more[hidden]{display:none}
+.filter-btn{
+  height:34px;padding:0 15px;border-radius:999px;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);font-family:inherit;font-size:13px;
+  font-weight:600;cursor:pointer;transition:.16s;
+}
+.filter-btn:hover{color:var(--text);border-color:#33485b}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ============ 参数表 ============ */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+table{width:100%;border-collapse:collapse;min-width:780px;font-size:14px}
+thead th{
+  background:var(--surface-2);text-align:left;padding:12px 16px;
+  font-size:12.5px;letter-spacing:.07em;color:var(--muted);font-weight:600;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+tbody td{padding:12px 16px;border-bottom:1px solid var(--border-soft);color:var(--muted);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody td:first-child{color:var(--text);font-weight:600;white-space:nowrap}
+code.k{
+  font-family:var(--mono);font-size:12.5px;color:var(--accent-2);
+  background:rgba(47,214,198,.08);border:1px solid rgba(47,214,198,.2);
+  border-radius:6px;padding:1px 6px;white-space:nowrap;
+}
+
+/* ============ 建议 / 步骤 ============ */
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:16px}
+.tip{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.tip h3{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.tip .num{
+  width:22px;height:22px;border-radius:7px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;
+}
+.tip p{font-size:14px;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(236px,1fr));gap:16px}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.step-num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.14em}
+.step h3{margin:8px 0 6px}
+.step p{font-size:14px;color:var(--muted)}
+
+/* ============ 页脚 / 提示条 ============ */
+footer{border-top:1px solid var(--border-soft);margin-top:44px;padding:28px 0 46px;color:var(--muted-2);font-size:13px}
+.toast{
+  position:fixed;left:50%;bottom:30px;transform:translate(-50%,14px);
+  background:var(--surface-3);border:1px solid var(--border);border-radius:10px;
+  padding:10px 20px;font-size:14px;opacity:0;pointer-events:none;transition:.22s;z-index:99;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ============ 响应式 ============ */
+@media (max-width:980px){
+  .designer{grid-template-columns:1fr}
+}
+@media (max-width:820px){
+  .nav-links{display:none}
+  .hero{padding:52px 0 32px}
+  .section{padding:44px 0}
+  .wrap{padding:0 18px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <span class="brand-dot" aria-hidden="true"></span>
+      准星实验室
+      <span class="tag">非官方</span>
+    </div>
+    <nav class="nav-links" aria-label="页面导航">
+      <a href="#designer">设计器</a>
+      <a href="#presets">预设</a>
+      <a href="#fields">参数详解</a>
+      <a href="#tips">调校建议</a>
+      <a href="#import">导入教程</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ============ 首屏 ============ -->
+  <section class="hero wrap">
+    <p class="eyebrow">VALORANT · Crosshair Lab</p>
+    <h1>调一支<br><em>看得清、打得准</em>的准星</h1>
+    <p class="lede">
+      准星是你在无畏契约里注视时间最长的东西。它太小看不见人，太大挡住头，
+      颜色和背景撞色还会让你多犹豫零点几秒。下面这个设计器可以实时预览内线、外线、
+      中心点和轮廓，调完直接生成能导入游戏的分享码。
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#designer">开始调准星</a>
+      <a class="btn" href="#presets">看看现成预设</a>
+    </div>
+    <ul class="hero-facts">
+      <li class="fact"><b>8 色 × 15 形状</b>自动组合出几百支预设</li>
+      <li class="fact"><b>内线 / 外线独立</b>长度、厚度、偏移分开调</li>
+      <li class="fact"><b>一键分享码</b>直接复制粘贴进游戏</li>
+    </ul>
+  </section>
+
+  <!-- ============ 设计器 ============ -->
+  <section id="designer" class="section wrap">
+    <div class="section-head">
+      <h2>准星设计器</h2>
+      <p>左边实时预览，右边调参数。分享码会跟着一起变，随时可以复制走。</p>
+    </div>
+
+    <div class="designer">
+      <!-- 预览 -->
+      <div class="card preview">
+        <div class="preview-head">
+          <div class="seg" role="group" aria-label="预览背景">
+            <button type="button" data-bg="dark" class="active">深色场景</button>
+            <button type="button" data-bg="light">亮色场景</button>
+            <button type="button" data-bg="range">靶场目标</button>
+          </div>
+          <button type="button" class="btn btn-sm" id="fireBtn">模拟开火</button>
+        </div>
+
+        <div class="stage">
+          <svg id="stage" viewBox="0 0 320 320" role="img" aria-label="准星实时预览">
+            <defs>
+              <radialGradient id="vig" cx="50%" cy="50%" r="75%">
+                <stop offset="50%" stop-color="#000" stop-opacity="0"/>
+                <stop offset="100%" stop-color="#000" stop-opacity="0.5"/>
+              </radialGradient>
+              <linearGradient id="rgbg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#22333d"/>
+                <stop offset="1" stop-color="#0b1218"/>
+              </linearGradient>
+            </defs>
+            <rect id="stageBg" x="0" y="0" width="320" height="320" fill="#0d1720"/>
+            <g id="sceneLayer"></g>
+            <g id="crosshairLayer"></g>
+          </svg>
+        </div>
+
+        <div class="stage-foot">
+          <label class="switch">
+            <input type="checkbox" id="moveToggle">
+            <span class="track"></span>
+            <span class="switch-label">模拟移动</span>
+          </label>
+          <span class="hint">只有开启对应的「移动误差 / 射击误差」，准星才会扩散</span>
+        </div>
+
+        <div class="code-card">
+          <div class="code-head">
+            <span>准星分享码</span>
+            <button type="button" class="btn btn-sm" id="copyBtn">复制</button>
+          </div>
+          <p class="code-text" id="codeOut"></p>
+        </div>
+
+        <div class="share-row" id="shareActions" hidden>
+          <button type="button" class="btn btn-sm" id="shortenBtn">生成短链</button>
+          <span class="hint" id="shortenMsg">分享码太长不好发？生成一个 6 位短链</span>
+        </div>
+        <div class="share-row" id="shortenResult" hidden>
+          <span class="share-link" id="shortenLink"></span>
+          <button type="button" class="btn btn-sm" id="copyLinkBtn">复制短链</button>
+        </div>
+
+        <div class="stage-foot mt-10">
+          <button type="button" class="btn btn-sm" id="randomBtn">随机一支</button>
+          <button type="button" class="btn btn-sm" id="resetBtn">恢复游戏默认</button>
+        </div>
+      </div>
+
+      <!-- 参数 -->
+      <div class="controls">
+        <!-- 颜色 -->
+        <div class="panel">
+          <div class="panel-head"><h3>颜色</h3></div>
+          <div class="panel-body">
+            <div class="field span-all">
+              <div class="field-top">
+                <label>预设颜色</label>
+                <span class="val" id="colorName">白色</span>
+              </div>
+              <div class="swatches" id="swatches" role="group" aria-label="准星颜色"></div>
+            </div>
+            <div class="field span-all">
+              <div class="field-top"><label for="customColor">自定义颜色</label></div>
+              <label class="color-custom">
+                <input type="color" id="customColor" value="#00FFD1">
+                点开色盘选色，选中即生效（分享码里会写成 8 + 十六进制色值）
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 轮廓 -->
+        <div class="panel" data-panel="outline">
+          <div class="panel-head">
+            <h3>轮廓</h3>
+            <label class="switch">
+              <input type="checkbox" data-bind="outlines" data-panel-toggle>
+              <span class="track"></span>
+              <span class="switch-label">启用</span>
+            </label>
+          </div>
+          <div class="panel-body">
+            <div class="field">
+              <div class="field-top"><label for="outlineThickness">轮廓厚度</label><span class="val"></span></div>
+              <input id="outlineThickness" type="range" min="1" max="10" step="1" data-bind="outlineThickness">
+            </div>
+            <div class="field">
+              <div class="field-top"><label for="outlineOpacity">轮廓不透明度</label><span class="val"></span></div>
+              <input id="outlineOpacity" type="range" min="0.1" max="1" step="0.05" data-bind="outlineOpacity">
+            </div>
+          </div>
+        </div>
+
+        <!-- 中心点 -->
+        <div class="panel" data-panel="dot">
+          <div class="panel-head">
+            <h3>中心点</h3>
+            <label class="switch">
+              <input type="checkbox" data-bind="centerDot" data-panel-toggle>
+              <span class="track"></span>
+              <span class="switch-label">启用</span>
+            </label>
+          </div>
+          <div class="panel-body">
+            <div class="field">
+              <div class="field-top"><label for="dotThickness">中心点厚度</label><span class="val"></span></div>
+              <input id="dotThickness" type="range" min="1" max="10" step="1" data-bind="dotThickness">
+            </div>
+            <div class="field">
+              <div class="field-top"><label for="dotOpacity">中心点不透明度</label><span class="val"></span></div>
+              <input id="dotOpacity" type="range" min="0.1" max="1" step="0.05" data-bind="dotOpacity">
+            </div>
+          </div>
+        </div>
+
+        <!-- 内线 -->
+        <div class="panel" data-panel="inner">
+          <div class="panel-head">
+            <h3>内线</h3>
+            <label class="switch">
+              <input type="checkbox" data-bind="inner.show" data-panel-toggle>
+              <span class="track"></span>
+              <span class="switch-label">显示</span>
+            </label>
+          </div>
+          <div class="panel-body">
+            <div class="field">
+              <div class="field-top"><label for="innerLength">长度</label><span class="val"></span></div>
+              <input id="innerLength" type="range" min="0" max="20" step="1" data-bind="inner.length">
+            </div>
+            <div class="field">
+              <div class="field-top"><label for="innerThickness">厚度</label><span class="val"></span></div>
+              <input id="innerThickness" type="range" min="0" max="10" step="1" data-bind="inner.thickness">
+            </div>
+            <div class="field">
+              <div class="field-top"><label for="innerOffset">偏移（离中心多远）</label><span class="val"></span></div>
+              <input id="innerOffset" type="range" min="0" max="20" step="1" data-bind="inner.offset">
+            </div>
+            <div class="field">
+              <div class="field-top"><label for="innerOpacity">不透明度</label><span class="val"></span></div>
+              <input id="innerOpacity" type="range" min="0.1" max="1" step="0.05" data-bind="inner.opacity">
+            </div>
+            <div class="field">
+              <label class="switch" for="innerMoveError">
+                <input id="innerMoveError" type="checkbox" data-bind="inner.moveError">
+                <span class="track"></span>
+                <span class="switch-label">移动误差</span>
+              </label>
+            </div>
+            <div class="field">
+              <label class="switch" for="innerFireError">
+                <input id="innerFireError" type="checkbox" data-bind="inner.fireError">
+                <span class="track"></span>
+                <span class="switch-label">射击误差</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 外线 -->
+        <div class="panel" data-panel="outer">
+          <div class="panel-head">
+            <h3>外线</h3>
+            <label class="switch">
+              <input type="checkbox" data-bind="outer.show" data-panel-toggle>
+              <span class="track"></span>
+              <span class="switch-label">显示</span>
+            </label>
+          </div>
+          <div class="panel-body">
+            <div class="field">
+              <div class="field-top"><label for="outerLength">长度</label><span class="val"></span></div>
+              <input id="outerLength" type="range" min="0" max="20" step="1" data-bind="outer.length">
+            </div>
+            <div class="field">
+              <div class="field-top"><label for="outerThickness">厚度</label><span class="val"></span></div>
+              <input id="outerThickness" type="range" min="0" max="10" step="1" data-bind="outer.thickness">
+            </div>
+            <div class="field">
+              <div class="field-top"><label for="outerOffset">偏移</label><span class="val"></span></div>
+              <input id="outerOffset" type="range" min="0" max="40" step="1" data-bind="outer.offset">
+            </div>
+            <div class="field">
+              <div class="field-top"><label for="outerOpacity">不透明度</label><span class="val"></span></div>
+              <input id="outerOpacity" type="range" min="0.05" max="1" step="0.05" data-bind="outer.opacity">
+            </div>
+            <div class="field">
+              <label class="switch" for="outerMoveError">
+                <input id="outerMoveError" type="checkbox" data-bind="outer.moveError">
+                <span class="track"></span>
+                <span class="switch-label">移动误差</span>
+              </label>
+            </div>
+            <div class="field">
+              <label class="switch" for="outerFireError">
+                <input id="outerFireError" type="checkbox" data-bind="outer.fireError">
+                <span class="track"></span>
+                <span class="switch-label">射击误差</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 高级 -->
+        <div class="panel">
+          <div class="panel-head"><h3>高级</h3></div>
+          <div class="panel-body">
+            <div class="field span-all">
+              <label class="switch" for="overrideFiring">
+                <input id="overrideFiring" type="checkbox" data-bind="overrideFiringOffset">
+                <span class="track"></span>
+                <span class="switch-label">覆盖射击误差偏移（用准星偏移值）</span>
+              </label>
+              <p class="hint">
+                对应游戏里的「高级选项」。开启后，开火时的位移会直接使用你设置的偏移值，
+                而不是默认的扩散幅度。本页暂不生成 ADS 与狙击镜的两段独立配置（<code class="k">A</code> / <code class="k">S</code> 段），需要的话可以在游戏里单独微调。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 预设 ============ -->
+  <section id="presets" class="section wrap">
+    <div class="section-head">
+      <h2>预设准星库</h2>
+      <p>按 8 种颜色 × 15 个形状模板 × 大小档位组合生成，目前共 <span id="presetCount">347</span> 支，另有几支手写调过的精选。
+        可以按类型筛选，也可以直接用搜索框找颜色或形状；点「应用到设计器」接着微调，或复制分享码拿去游戏里用。</p>
+    </div>
+    <div class="preset-toolbar">
+      <div class="preset-filter" id="presetFilter" role="group" aria-label="按类型筛选准星预设"></div>
+      <label class="preset-search">
+        <span class="sr-only">搜索准星</span>
+        <input type="search" id="presetSearch" placeholder="搜索颜色、形状或特征…" autocomplete="off">
+      </label>
+    </div>
+    <p class="preset-meta"><span id="presetResult"></span><span>每批显示 60 支</span></p>
+    <div class="presets" id="presetGrid"></div>
+    <div class="preset-more" id="presetMoreWrap" hidden>
+      <button type="button" class="btn" id="presetMore">显示更多准星</button>
+    </div>
+  </section>
+
+  <!-- ============ 热门榜（需要配置后端才显示） ============ -->
+  <section id="hot" class="section wrap" hidden>
+    <div class="section-head">
+      <h2>大家都在用的准星</h2>
+      <p>打开短链的人越多，这里排得越前。点「套用这支」直接把别人的准星装到上面的设计器里。</p>
+    </div>
+    <div class="rank-list" id="rankList"></div>
+  </section>
+
+  <!-- ============ 参数详解 ============ -->
+  <section id="fields" class="section wrap">
+    <div class="section-head">
+      <h2>每个参数到底在调什么</h2>
+      <p>表格里的「分享码字段」就是分享码里那个键名，两边一一对应，改哪个数字都心里有数。</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption class="sr-only">无畏契约准星参数、作用与分享码字段对照表</caption>
+        <thead>
+          <tr>
+            <th scope="col">分组</th>
+            <th scope="col">参数</th>
+            <th scope="col">作用</th>
+            <th scope="col">分享码字段</th>
+            <th scope="col">常见取值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>颜色</td>
+            <td>准星颜色</td>
+            <td>决定准星与背景的对比度。青色、粉色在多数地图上最不容易被吃掉；绿色在草地和毒雾里容易糊，白色在雪地、亮墙面上容易糊。</td>
+            <td><code class="k">c</code>，自定义色为 <code class="k">c;8</code> + <code class="k">u;RRGGBBFF</code></td>
+            <td>0–7 预设，8 自定义</td>
+          </tr>
+          <tr>
+            <td>轮廓</td>
+            <td>开关 / 不透明度 / 厚度</td>
+            <td>给每条线加一圈黑色描边。亮背景或烟里靠它撑住对比度，代价是准星整体变粗一点。</td>
+            <td><code class="k">h</code> / <code class="k">o</code> / <code class="k">t</code></td>
+            <td>厚度 1，不透明度 0.5–1</td>
+          </tr>
+          <tr>
+            <td>中心点</td>
+            <td>开关 / 厚度 / 不透明度</td>
+            <td>正中心的小方块，遮挡面积最小，适合靠中心点对枪和点射。</td>
+            <td><code class="k">d</code> / <code class="k">z</code> / <code class="k">a</code></td>
+            <td>厚度 1–2</td>
+          </tr>
+          <tr>
+            <td>内线</td>
+            <td>显示 / 长度 / 厚度 / 偏移 / 不透明度</td>
+            <td>主十字。偏移就是从中心到线条起点的距离，偏移越大中间空隙越大。</td>
+            <td><code class="k">0b</code> / <code class="k">0l</code> / <code class="k">0t</code> / <code class="k">0o</code> / <code class="k">0a</code></td>
+            <td>长度 2–6，厚度 1–2，偏移 1–3</td>
+          </tr>
+          <tr>
+            <td>内线误差</td>
+            <td>移动误差 / 射击误差</td>
+            <td>开启后准星会随移动、开火向外扩散。两个都关掉就是完全静止的准星。</td>
+            <td><code class="k">0m</code> / <code class="k">0f</code>，倍率 <code class="k">0s</code> / <code class="k">0e</code></td>
+            <td>练习用建议关闭</td>
+          </tr>
+          <tr>
+            <td>外线</td>
+            <td>显示 / 长度 / 厚度 / 偏移 / 不透明度</td>
+            <td>外圈那四条短横。常见用法是把偏移拉大、不透明度调低，做成扩散范围的参考线。</td>
+            <td><code class="k">1b</code> / <code class="k">1l</code> / <code class="k">1t</code> / <code class="k">1o</code> / <code class="k">1a</code></td>
+            <td>偏移 8–12，不透明度 0.3–0.5</td>
+          </tr>
+          <tr>
+            <td>高级</td>
+            <td>覆盖射击误差偏移</td>
+            <td>让开火扩散直接使用你设置的偏移值，而不是游戏默认的扩散表现。</td>
+            <td><code class="k">m</code></td>
+            <td>默认关闭</td>
+          </tr>
+          <tr>
+            <td>高级</td>
+            <td>高级选项 / ADS / 狙击镜</td>
+            <td>分开设置开镜和狙击镜的准星，分享码里是独立的段。</td>
+            <td><code class="k">s;1</code> / <code class="k">p;0</code> + <code class="k">A;</code> 段 / <code class="k">S;</code> 段</td>
+            <td>本页未生成，游戏内可单独调</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint mt-10">
+      说明：分享码里没有出现的字段会沿用游戏内的默认值；本页生成的代码会把你调过的参数全部写出来，导入后所见即所得。
+    </p>
+  </section>
+
+  <!-- ============ 调校建议 ============ -->
+  <section id="tips" class="section wrap">
+    <div class="section-head">
+      <h2>调准星的几条经验</h2>
+      <p>准星没有标准答案，但有些坑几乎所有人都踩过。</p>
+    </div>
+    <div class="tips">
+      <article class="tip">
+        <h3><span class="num">1</span>先减面积，再谈好看</h3>
+        <p>准星每粗一格、每长一格，遮挡的都是目标头部。厚度 1–2、长度 2–6 已经够用，剩下的靠练习补。</p>
+      </article>
+      <article class="tip">
+        <h3><span class="num">2</span>颜色挑对比度，不挑喜好</h3>
+        <p>青色和粉色在绑点、亚海悬城这类灰白场景里都挺稳。绿色在草地和烟雾边缘最容易糊掉，白色在亮墙面同理。</p>
+      </article>
+      <article class="tip">
+        <h3><span class="num">3</span>中心点还是十字，看你的开枪方式</h3>
+        <p>习惯点射、靠第一枪爆头，用中心点更干净；习惯短点扫、靠压枪控制，保留内线能看清落点。</p>
+      </article>
+      <article class="tip">
+        <h3><span class="num">4</span>关掉误差，先看自己的问题</h3>
+        <p>把移动误差和射击误差全关掉，准星会一直静止。此时弹孔打偏就是你自己的锅，练弹道和压枪时特别有用。</p>
+      </article>
+      <article class="tip">
+        <h3><span class="num">5</span>外线是扩散参考，不是装饰</h3>
+        <p>把外线偏移拉到 8–12、不透明度压到 0.3 左右，它会变成一圈很淡的范围提示，帮你判断什么时候该停火。</p>
+      </article>
+      <article class="tip">
+        <h3><span class="num">6</span>换准星别太频繁</h3>
+        <p>肌肉记忆是练出来的，不是调出来的。选定一支后至少打一二十把再评估，别每把都换新的。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ 导入教程 ============ -->
+  <section id="import" class="section wrap">
+    <div class="section-head">
+      <h2>怎么把分享码导进游戏</h2>
+      <p>三步搞定，导入后会自动存成一个新的准星档案。</p>
+    </div>
+    <div class="steps">
+      <article class="step">
+        <p class="step-num">STEP 01</p>
+        <h3>打开准星设置</h3>
+        <p>进入游戏后按 Esc，选择「设置」→「准星」→「准星档案」。</p>
+      </article>
+      <article class="step">
+        <p class="step-num">STEP 02</p>
+        <h3>点导入代码</h3>
+        <p>点右上角的「导入准星代码」按钮（十字图标），会弹出一个输入框。</p>
+      </article>
+      <article class="step">
+        <p class="step-num">STEP 03</p>
+        <h3>粘贴并确认</h3>
+        <p>把上面生成的分享码粘进去，点导入，然后选中这个新档案就能用了。</p>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      准星实验室 · 非官方粉丝作品，与 Riot Games 无任何关联。VALORANT 及无畏契约是 Riot Games 的商标。
+      分享码格式参考社区公开的字段定义整理，导入前建议先在游戏内的训练场确认一次效果。
+    </p>
+    <p class="hint mt-10">当前版本 v1.2.0（分享码解码 + 后端联动）。页脚看不到这行，说明打开的还是旧版本，按 Ctrl+F5 强刷。</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+   * 常量：颜色与默认值
+   * 颜色顺序和游戏内预设色板一致，索引就是分享码里的 c 值
+   * ============================================================ */
+  var PRESET_COLORS = [
+    { name: '白色', hex: '#FFFFFF' },
+    { name: '绿色', hex: '#00FF00' },
+    { name: '黄绿', hex: '#7FFF00' },
+    { name: '绿黄', hex: '#DFFF00' },
+    { name: '黄色', hex: '#FFFF00' },
+    { name: '青色', hex: '#00FFFF' },
+    { name: '粉色', hex: '#FF00FF' },
+    { name: '红色', hex: '#FF0000' }
+  ];
+
+  /* 默认值对齐游戏里那支「白色细十字 + 淡轮廓」 */
+  var DEFAULT_STATE = {
+    colorIndex: 0,
+    useCustomColor: false,
+    customColor: '#00FFD1',
+    outlines: true,
+    outlineOpacity: 0.5,
+    outlineThickness: 1,
+    centerDot: false,
+    dotThickness: 2,
+    dotOpacity: 1,
+    overrideFiringOffset: false,
+    inner: { show: true, opacity: 1, length: 6, thickness: 2, offset: 3, moveError: false, fireError: false },
+    outer: { show: false, opacity: 1, length: 2, thickness: 2, offset: 10, moveError: true, fireError: true }
+  };
+
+  /* 预设分类：用于筛选按钮 */
+  var PRESET_CATS = [
+    { id: 'all', name: '全部' },
+    { id: 'cross', name: '十字型' },
+    { id: 'dot', name: '点射型' },
+    { id: 'spray', name: '扫射型' },
+    { id: 'practice', name: '练习型' },
+    { id: 'wild', name: '个性色' }
+  ];
+
+  /* 预设准星：只写和默认值不同的部分，合并后使用 */
+  var PRESETS = [
+    /* ---------- 十字型 ---------- */
+    {
+      cat: 'cross', name: '经典白四线',
+      desc: '白色加一圈淡轮廓，最稳的通用准星，深色亮色背景都不太容易糊。',
+      cfg: {
+        colorIndex: 0, outlines: true, outlineOpacity: 0.5, outlineThickness: 1, centerDot: false,
+        inner: { show: true, opacity: 1, length: 4, thickness: 2, offset: 2, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: '青色细线',
+      desc: '青色在多数地图上对比度最好，线条压到厚度 1，几乎不挡头。',
+      cfg: {
+        colorIndex: 5, outlines: true, outlineOpacity: 1, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 4, thickness: 1, offset: 2, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: '绿色细线',
+      desc: '绿色对眼睛最舒服，但草地和毒雾里容易糊，建议搭配轮廓使用。',
+      cfg: {
+        colorIndex: 1, outlines: true, outlineOpacity: 1, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 5, thickness: 1, offset: 3, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: '黄绿细线',
+      desc: '介于黄和绿之间的颜色，暖光场景里比纯绿更清楚。',
+      cfg: {
+        colorIndex: 2, outlines: true, outlineOpacity: 1, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 5, thickness: 1, offset: 2, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: '黄色细线',
+      desc: '黄线在暗色场景里非常跳，代价是亮地面和沙地背景会略糊。',
+      cfg: {
+        colorIndex: 4, outlines: true, outlineOpacity: 1, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 4, thickness: 1, offset: 2, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: '粉色细线',
+      desc: '粉色和青色一样属于高对比色，喜欢暖色调可以从这支开始。',
+      cfg: {
+        colorIndex: 6, outlines: true, outlineOpacity: 1, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 4, thickness: 1, offset: 3, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: '红色细线',
+      desc: '红线辨识度最高，缺点是敌人血条和受击提示也是红的，容易分神。',
+      cfg: {
+        colorIndex: 7, outlines: true, outlineOpacity: 1, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 3, thickness: 1, offset: 3, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: '极细长线',
+      desc: '厚度只有 1 的长线，指向感强、遮挡少，适合习惯看线条延伸的玩家。',
+      cfg: {
+        colorIndex: 0, outlines: true, outlineOpacity: 0.75, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 8, thickness: 1, offset: 1, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: 'CS 风格十字',
+      desc: '四条线在中心相接、不留空隙，从别的射击游戏转过来最容易适应。',
+      cfg: {
+        colorIndex: 1, outlines: true, outlineOpacity: 1, outlineThickness: 1, centerDot: false,
+        inner: { show: true, opacity: 1, length: 8, thickness: 2, offset: 0, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: '大开口十字',
+      desc: '偏移拉到 7，中间留出大片空地，扫射时不容易被线条带偏视线。',
+      cfg: {
+        colorIndex: 5, outlines: true, outlineOpacity: 1, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 5, thickness: 2, offset: 7, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'cross', name: '内外双线',
+      desc: '内线细、外线淡，两圈线分别负责瞄准和判断扩散范围。',
+      cfg: {
+        colorIndex: 5, outlines: true, outlineOpacity: 0.5, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 3, thickness: 1, offset: 2, moveError: false, fireError: false },
+        outer: { show: true, opacity: 0.6, length: 2, thickness: 1, offset: 8, moveError: false, fireError: false }
+      }
+    },
+
+    /* ---------- 点射型 ---------- */
+    {
+      cat: 'dot', name: '小绿点',
+      desc: '只留中心点，遮挡面积最小，适合点射和远距离对枪。',
+      cfg: {
+        colorIndex: 1, outlines: false, centerDot: true, dotThickness: 2, dotOpacity: 1,
+        inner: { show: false }, outer: { show: false }
+      }
+    },
+    {
+      cat: 'dot', name: '小红点',
+      desc: '红色中心点在灰白场景里最抓眼，配细轮廓防止在亮处消失。',
+      cfg: {
+        colorIndex: 7, outlines: true, outlineOpacity: 0.8, outlineThickness: 1,
+        centerDot: true, dotThickness: 2, dotOpacity: 1,
+        inner: { show: false }, outer: { show: false }
+      }
+    },
+    {
+      cat: 'dot', name: '白点极简',
+      desc: '一个白色方块居中，最接近纯瞄准点的用法，适合干净的打法。',
+      cfg: {
+        colorIndex: 0, outlines: false, centerDot: true, dotThickness: 3, dotOpacity: 1,
+        inner: { show: false }, outer: { show: false }
+      }
+    },
+    {
+      cat: 'dot', name: '粉色小点',
+      desc: '厚度 1 的粉色点，几乎不遮挡，需要稳定的准心控制。',
+      cfg: {
+        colorIndex: 6, outlines: true, outlineOpacity: 0.6, outlineThickness: 1,
+        centerDot: true, dotThickness: 1, dotOpacity: 1,
+        inner: { show: false }, outer: { show: false }
+      }
+    },
+    {
+      cat: 'dot', name: '大黄点',
+      desc: '厚度 5 的点，近视或小屏幕上更容易看清中心，代价是遮挡变大。',
+      cfg: {
+        colorIndex: 4, outlines: false, centerDot: true, dotThickness: 5, dotOpacity: 1,
+        inner: { show: false }, outer: { show: false }
+      }
+    },
+    {
+      cat: 'dot', name: '绿点加短线',
+      desc: '中心点负责瞄准，四条短线只是参考，兼顾了点射和跟枪。',
+      cfg: {
+        colorIndex: 1, outlines: true, outlineOpacity: 0.6, outlineThickness: 1,
+        centerDot: true, dotThickness: 2, dotOpacity: 1,
+        inner: { show: true, opacity: 1, length: 2, thickness: 1, offset: 4, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'dot', name: '红点长线',
+      desc: '红点配长内线，近距离靠线、远距离靠点，一支准星两种用法。',
+      cfg: {
+        colorIndex: 7, outlines: true, outlineOpacity: 1, outlineThickness: 2,
+        centerDot: true, dotThickness: 2, dotOpacity: 1,
+        inner: { show: true, opacity: 1, length: 6, thickness: 1, offset: 3, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+
+    /* ---------- 扫射型 ---------- */
+    {
+      cat: 'spray', name: '扩散可视化',
+      desc: '打开移动与射击误差，用准星向外扩的幅度提示你什么时候不该开枪。',
+      cfg: {
+        colorIndex: 5, outlines: false, centerDot: false,
+        inner: { show: true, opacity: 1, length: 5, thickness: 2, offset: 2, moveError: true, fireError: true },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'spray', name: '压枪参考线',
+      desc: '内线管瞄准、外线标扩散上限，连发时能直观看到什么时候该停手。',
+      cfg: {
+        colorIndex: 5, outlines: false, centerDot: false,
+        inner: { show: true, opacity: 1, length: 4, thickness: 2, offset: 2, moveError: true, fireError: true },
+        outer: { show: true, opacity: 0.3, length: 3, thickness: 2, offset: 12, moveError: true, fireError: true }
+      }
+    },
+    {
+      cat: 'spray', name: '扩散哨兵',
+      desc: '内外线都跟着开火扩散，外圈用高对比度颜色，扫射节奏一目了然。',
+      cfg: {
+        colorIndex: 7, outlines: true, outlineOpacity: 0.8, outlineThickness: 1,
+        inner: { show: true, opacity: 1, length: 5, thickness: 2, offset: 3, moveError: true, fireError: true },
+        outer: { show: true, opacity: 0.45, length: 2, thickness: 2, offset: 9, moveError: true, fireError: true }
+      }
+    },
+    {
+      cat: 'spray', name: '四点框',
+      desc: '只有四段外线，围出一个很淡的方框，适合不喜欢中心有东西的玩家。',
+      cfg: {
+        colorIndex: 5, outlines: true, outlineOpacity: 0.9, outlineThickness: 2, centerDot: false,
+        inner: { show: false },
+        outer: { show: true, opacity: 1, length: 3, thickness: 3, offset: 14, moveError: false, fireError: false }
+      }
+    },
+
+    /* ---------- 练习型 ---------- */
+    {
+      cat: 'practice', name: '静态练习',
+      desc: '完全静止，看不见任何扩散，专门用来练弹道和压枪。',
+      cfg: {
+        colorIndex: 4, outlines: true, outlineOpacity: 0.6, outlineThickness: 1,
+        centerDot: true, dotThickness: 2, dotOpacity: 1,
+        inner: { show: true, opacity: 1, length: 3, thickness: 2, offset: 3, moveError: false, fireError: false },
+        outer: { show: true, opacity: 0.35, length: 2, thickness: 2, offset: 10, moveError: false, fireError: false }
+      }
+    },
+    {
+      cat: 'practice', name: '纯静态十字',
+      desc: '没有任何误差提示的干净十字，弹孔打偏时责任完全在自己。',
+      cfg: {
+        colorIndex: 1, outlines: true, outlineOpacity: 1, outlineThickness: 1, centerDot: false,
+        inner: { show: true, opacity: 1, length: 6, thickness: 2, offset: 3, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'practice', name: '大口径练习点',
+      desc: '大号中心点配静态误差，练习点头和甩枪时落点看得最清楚。',
+      cfg: {
+        colorIndex: 7, outlines: true, outlineOpacity: 1, outlineThickness: 2,
+        centerDot: true, dotThickness: 4, dotOpacity: 1,
+        inner: { show: false }, outer: { show: false }
+      }
+    },
+    {
+      cat: 'practice', name: '准心定位线',
+      desc: '只有水平方向的宽线，用来练爆头线高度，逼自己靠预瞄而不是靠准星。',
+      cfg: {
+        colorIndex: 5, outlines: true, outlineOpacity: 1, outlineThickness: 1, centerDot: true, dotThickness: 1, dotOpacity: 1,
+        inner: { show: true, opacity: 1, length: 10, thickness: 2, offset: 0, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+
+    /* ---------- 个性色 ---------- */
+    {
+      cat: 'wild', name: '橙色自定义',
+      desc: '自定义色示例：橙线在大多数灰蓝场景里都很跳，分享码用 c;8 + 十六进制记录。',
+      cfg: {
+        useCustomColor: true, customColor: '#FFA500',
+        outlines: true, outlineOpacity: 0.7, outlineThickness: 1, centerDot: true, dotThickness: 2, dotOpacity: 1,
+        inner: { show: true, opacity: 1, length: 3, thickness: 1, offset: 3, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'wild', name: '紫色细十字',
+      desc: '低饱和紫色不容易和场景里任何元素撞色，长时间看着不累。',
+      cfg: {
+        useCustomColor: true, customColor: '#A020F0',
+        outlines: true, outlineOpacity: 1, outlineThickness: 1, centerDot: false,
+        inner: { show: true, opacity: 1, length: 4, thickness: 1, offset: 2, moveError: false, fireError: false },
+        outer: { show: false }
+      }
+    },
+    {
+      cat: 'wild', name: '薄荷宽十字',
+      desc: '薄荷绿配厚度 3 的宽线，属于视觉上很舒服但比较占屏的选择。',
+      cfg: {
+        useCustomColor: true, customColor: '#00FFD1',
+        outlines: true, outlineOpacity: 0.8, outlineThickness: 2, centerDot: false,
+        inner: { show: true, opacity: 1, length: 6, thickness: 3, offset: 4, moveError: false, fireError: false },
+        outer: { show: true, opacity: 0.4, length: 2, thickness: 2, offset: 12, moveError: false, fireError: false }
+      }
+    }
+  ];
+
+  /* ============================================================
+   * 批量生成准星
+   * 8 种预设色 × 15 个形状模板 × 大小档位，再补一组自定义色，
+   * 名称和参数描述都按实际数值自动生成，不需要一条条手写。
+   * ============================================================ */
+  var CUSTOM_COLOR_FAMILIES = [
+    { name: '橙色', hex: '#FFA500' },
+    { name: '紫色', hex: '#A020F0' },
+    { name: '薄荷', hex: '#00FFD1' },
+    { name: '天蓝', hex: '#4FC3F7' },
+    { name: '玫红', hex: '#FF4F81' },
+    { name: '金色', hex: '#FFD24A' }
+  ];
+
+  /* 小 / 标准 / 大三档：长度偏移按比例缩放，厚度和点大小做加减 */
+  var SIZE_FACTORS = {
+    小: { length: 0.6, thickness: -1, dot: -1 },
+    标准: { length: 1, thickness: 0, dot: 0 },
+    大: { length: 1.5, thickness: 1, dot: 1 }
+  };
+
+  var SHAPE_TEMPLATES = [
+    {
+      name: '极细十字', cat: 'cross', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 1, thickness: 1 },
+      inner: { length: 4, thickness: 1, offset: 1 }
+    },
+    {
+      name: '标准十字', cat: 'cross', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 0.5, thickness: 1 },
+      inner: { length: 6, thickness: 2, offset: 3 }
+    },
+    {
+      name: '短粗十字', cat: 'cross', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 0.8, thickness: 1 },
+      inner: { length: 3, thickness: 3, offset: 1 }
+    },
+    {
+      name: '长细十字', cat: 'cross', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 0.75, thickness: 1 },
+      inner: { length: 8, thickness: 1, offset: 2 }
+    },
+    {
+      name: '大开口十字', cat: 'cross', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 1, thickness: 1 },
+      inner: { length: 5, thickness: 2, offset: 7 }
+    },
+    {
+      name: 'CS 相接十字', cat: 'cross', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 1, thickness: 1 },
+      inner: { length: 8, thickness: 2, offset: 0 }
+    },
+    {
+      name: '点加短线', cat: 'dot', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 0.6, thickness: 1 },
+      dot: 2, inner: { length: 2, thickness: 1, offset: 4 }
+    },
+    {
+      name: '点加十字', cat: 'dot', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 0.5, thickness: 1 },
+      dot: 2, inner: { length: 5, thickness: 2, offset: 3 }
+    },
+    {
+      name: '纯中心点', cat: 'dot', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 0.6, thickness: 1 },
+      dot: 2
+    },
+    {
+      name: '内外双圈', cat: 'cross', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 0.5, thickness: 1 },
+      inner: { length: 3, thickness: 1, offset: 2 },
+      outer: { length: 2, thickness: 1, offset: 8, opacity: 0.6 }
+    },
+    {
+      name: '扩散可视', cat: 'spray', sizes: ['小', '标准', '大'],
+      outline: { on: false },
+      inner: { length: 5, thickness: 2, offset: 2, moveError: true, fireError: true }
+    },
+    {
+      name: '静态练习', cat: 'practice', sizes: ['小', '标准', '大'],
+      outline: { on: true, opacity: 0.6, thickness: 1 },
+      dot: 2, inner: { length: 4, thickness: 2, offset: 3 }
+    },
+    {
+      name: '四点框', cat: 'spray', sizes: ['标准'],
+      outline: { on: true, opacity: 0.9, thickness: 2 },
+      outer: { length: 3, thickness: 3, offset: 12, opacity: 1 }
+    },
+    {
+      name: '压枪长外线', cat: 'spray', sizes: ['标准'],
+      outline: { on: false },
+      inner: { length: 4, thickness: 2, offset: 2, moveError: true, fireError: true },
+      outer: { length: 4, thickness: 2, offset: 14, opacity: 0.3, moveError: true, fireError: true }
+    },
+    {
+      name: '细线加淡框', cat: 'cross', sizes: ['标准'],
+      outline: { on: true, opacity: 0.5, thickness: 1 },
+      inner: { length: 3, thickness: 1, offset: 2 },
+      outer: { length: 1, thickness: 1, offset: 6, opacity: 0.5 }
+    }
+  ];
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  /* 把一个颜色、一个模板、一个尺寸档位组装成完整的准星参数 */
+  function makePresetConfig(color, template, sizeName) {
+    var cfg = clone(DEFAULT_STATE);
+    if (color.hex) {
+      cfg.useCustomColor = true;
+      cfg.customColor = color.hex;
+    } else {
+      cfg.useCustomColor = false;
+      cfg.colorIndex = color.index;
+    }
+
+    var factor = SIZE_FACTORS[sizeName];
+
+    cfg.outlines = template.outline.on;
+    if (template.outline.on) {
+      cfg.outlineOpacity = template.outline.opacity;
+      cfg.outlineThickness = clamp(Math.round(template.outline.thickness + factor.thickness), 1, 10);
+    }
+
+    cfg.centerDot = !!template.dot;
+    if (template.dot) {
+      cfg.dotThickness = clamp(Math.round(template.dot + factor.dot), 1, 10);
+    }
+
+    cfg.inner.show = !!template.inner;
+    if (template.inner) {
+      cfg.inner.length = clamp(Math.round(template.inner.length * factor.length), 0, 20);
+      cfg.inner.offset = clamp(Math.round(template.inner.offset * factor.length), 0, 20);
+      cfg.inner.thickness = clamp(Math.round(template.inner.thickness + factor.thickness), 1, 10);
+      cfg.inner.opacity = 1;
+      cfg.inner.moveError = !!template.inner.moveError;
+      cfg.inner.fireError = !!template.inner.fireError;
+    }
+
+    cfg.outer.show = !!template.outer;
+    if (template.outer) {
+      cfg.outer.length = clamp(Math.round(template.outer.length * factor.length), 0, 20);
+      cfg.outer.offset = clamp(Math.round(template.outer.offset * factor.length), 0, 40);
+      cfg.outer.thickness = clamp(Math.round(template.outer.thickness + factor.thickness), 1, 10);
+      cfg.outer.opacity = template.outer.opacity;
+      cfg.outer.moveError = !!template.outer.moveError;
+      cfg.outer.fireError = !!template.outer.fireError;
+    }
+
+    return cfg;
+  }
+
+  /* 按参数反推一句人话描述，用于卡片上的说明文字 */
+  function describeConfig(cfg) {
+    var parts = [];
+    if (cfg.inner.show && cfg.inner.length > 0 && cfg.inner.thickness > 0) {
+      parts.push('内线 长' + cfg.inner.length + ' 厚' + cfg.inner.thickness + ' 偏移' + cfg.inner.offset);
+    } else {
+      parts.push('无内线');
+    }
+    if (cfg.centerDot) parts.push('中心点 ' + cfg.dotThickness);
+    if (cfg.outer.show && cfg.outer.length > 0 && cfg.outer.thickness > 0) {
+      parts.push('外线 偏移' + cfg.outer.offset + ' 不透明度 ' + Math.round(cfg.outer.opacity * 100) + '%');
+    }
+    parts.push(cfg.outlines ? '轮廓 ' + cfg.outlineThickness : '无轮廓');
+    /* 只有真的显示出来的线才计算误差扩散，隐藏的分组不参与判断 */
+    var spreads =
+      (cfg.inner.show && (cfg.inner.moveError || cfg.inner.fireError)) ||
+      (cfg.outer.show && (cfg.outer.moveError || cfg.outer.fireError));
+    parts.push(spreads ? '有误差扩散' : '静态不扩散');
+    return parts.join(' · ');
+  }
+
+  function buildGeneratedPresets() {
+    var list = [];
+
+    PRESET_COLORS.forEach(function (color, index) {
+      var family = { name: color.name, index: index };
+      SHAPE_TEMPLATES.forEach(function (template) {
+        template.sizes.forEach(function (sizeName) {
+          var cfg = makePresetConfig(family, template, sizeName);
+          list.push({
+            cat: template.cat,
+            name: color.name + ' · ' + template.name + (sizeName === '标准' ? '' : '（' + sizeName + '）'),
+            desc: describeConfig(cfg),
+            cfg: cfg,
+            code: buildCode(cfg)
+          });
+        });
+      });
+    });
+
+    CUSTOM_COLOR_FAMILIES.forEach(function (color) {
+      SHAPE_TEMPLATES.forEach(function (template) {
+        if (template.name !== '标准十字' && template.name !== '纯中心点') return;
+        var cfg = makePresetConfig(color, template, '标准');
+        list.push({
+          cat: 'wild',
+          name: color.name + ' · ' + template.name,
+          desc: describeConfig(cfg),
+          cfg: cfg,
+          code: buildCode(cfg)
+        });
+      });
+    });
+
+    return list;
+  }
+
+  /* 手写的精选准星 + 批量生成的准星，按分享码去重 */
+  function buildAllPresets() {
+    var curated = PRESETS.map(function (preset) {
+      var cfg = merge(DEFAULT_STATE, preset.cfg);
+      return {
+        cat: preset.cat,
+        name: preset.name,
+        desc: preset.desc,
+        cfg: cfg,
+        code: buildCode(cfg)
+      };
+    });
+
+    var seen = {};
+    return curated.concat(buildGeneratedPresets()).filter(function (preset) {
+      if (seen[preset.code]) return false;
+      seen[preset.code] = true;
+      return true;
+    });
+  }
+
+  /* 预览几何：1 个游戏单位 = 2 个 SVG 单位 */
+  var SCALE = 2;
+  var CENTER = 160;
+
+  /* ============================================================
+   * 小工具
+   * ============================================================ */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
+  function round2(n) { return Math.round(n * 100) / 100; }
+  /* 分享码里的数字：1 就写 1，0.5 就写 0.5，不补多余的 0 */
+  function num(n) { return String(Math.round(n * 1000) / 1000); }
+
+  /* 深度合并：预设只覆盖它写了的那几个字段 */
+  function merge(base, over) {
+    var out = clone(base);
+    Object.keys(over || {}).forEach(function (key) {
+      var value = over[key];
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        out[key] = merge(out[key] || {}, value);
+      } else {
+        out[key] = value;
+      }
+    });
+    return out;
+  }
+
+  /* ============================================================
+   * 状态
+   * ============================================================ */
+  var state = clone(DEFAULT_STATE);
+  var background = 'dark';
+  var firePulse = 0;      /* 模拟开火：1 → 0 衰减 */
+  var movePulse = 0;      /* 模拟移动：0 ↔ 1 平滑过渡 */
+  var moveTarget = 0;
+  var rafId = 0;
+  var lastTs = 0;
+
+  function getPath(path) {
+    return path.split('.').reduce(function (obj, key) {
+      return obj == null ? undefined : obj[key];
+    }, state);
+  }
+
+  function setPath(path, value) {
+    var keys = path.split('.');
+    var last = keys.pop();
+    keys.reduce(function (obj, key) { return obj[key]; }, state)[last] = value;
+  }
+
+  function activeColor(cfg) {
+    return cfg.useCustomColor ? cfg.customColor.toUpperCase() : PRESET_COLORS[cfg.colorIndex].hex;
+  }
+
+  /* ============================================================
+   * 分享码生成
+   * 字段含义见页面上方的参数详解表格
+   * ============================================================ */
+  function buildCode(cfg) {
+    var parts = [];
+    var put = function (key, value) { parts.push(key, num(value)); };
+    var flag = function (key, on) { parts.push(key, on ? '1' : '0'); };
+
+    parts.push('0', 's', '1', 'P');
+
+    /* 颜色：白色是默认值，可以不写；自定义色写 c;8 加十六进制 */
+    if (cfg.useCustomColor) {
+      parts.push('c', '8', 'u', cfg.customColor.replace('#', '').toUpperCase() + 'FF');
+    } else if (cfg.colorIndex !== 0) {
+      parts.push('c', String(cfg.colorIndex));
+    }
+
+    /* 主体：轮廓、中心点、误差偏移覆盖 */
+    flag('h', cfg.outlines);
+    put('t', cfg.outlineThickness);
+    put('o', cfg.outlineOpacity);
+    flag('d', cfg.centerDot);
+    put('z', cfg.dotThickness);
+    put('a', cfg.dotOpacity);
+    flag('m', cfg.overrideFiringOffset);
+
+    /* 内线前缀 0，外线前缀 1 */
+    [['0', cfg.inner], ['1', cfg.outer]].forEach(function (pair) {
+      var prefix = pair[0];
+      var group = pair[1];
+      flag(prefix + 'b', group.show);
+      put(prefix + 't', group.thickness);
+      put(prefix + 'l', group.length);
+      put(prefix + 'o', group.offset);
+      put(prefix + 'a', group.opacity);
+      flag(prefix + 'm', group.moveError);
+      parts.push(prefix + 's', '1');   /* 移动误差倍率 */
+      flag(prefix + 'f', group.fireError);
+      parts.push(prefix + 'e', '1');   /* 射击误差倍率 */
+    });
+
+    return parts.join(';');
+  }
+
+  /* ============================================================
+   * 分享码解码：把别人发来的一串码还原成准星参数
+   * 用途：打开短链时自动载入、以及从热门榜直接套用别人的准星
+   * ============================================================ */
+  function clampNumber(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function decodeConfig(code) {
+    var tokens = String(code || '').trim().split(';');
+    var start = tokens.indexOf('P');
+    if (start < 0) return null;
+
+    var cfg = clone(DEFAULT_STATE);   /* 码里没写的字段沿用游戏默认值 */
+    var seen = false;
+
+    for (var i = start + 1; i + 1 < tokens.length; i += 2) {
+      var key = tokens[i];
+      var raw = tokens[i + 1];
+
+      /* 后面的 A 段是开镜、S 段是狙击镜，本页不建模，遇到就停 */
+      if (key === 'A' || key === 'S' || key === 'NAME' || key === 'P') break;
+
+      if (key === 'u') {
+        var hex = String(raw).replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
+        if (hex.length === 6) {
+          cfg.customColor = '#' + hex.toUpperCase();
+          cfg.useCustomColor = true;
+          seen = true;
+        }
+        continue;
+      }
+
+      var value = parseFloat(raw);
+      if (isNaN(value)) continue;      /* 认不出来的键直接跳过，保证向前兼容 */
+
+      /* 内线前缀 0、外线前缀 1 */
+      if (key.length === 2 && (key.charAt(0) === '0' || key.charAt(0) === '1')) {
+        var group = key.charAt(0) === '0' ? cfg.inner : cfg.outer;
+        var inner = key.charAt(0) === '0';
+        switch (key.charAt(1)) {
+          case 'b': group.show = value === 1; break;
+          case 't': group.thickness = clampNumber(Math.round(value), 0, 10); break;
+          case 'l': group.length = clampNumber(Math.round(value), 0, 20); break;
+          case 'o': group.offset = clampNumber(Math.round(value), 0, inner ? 20 : 40); break;
+          case 'a': group.opacity = clampNumber(value, 0.05, 1); break;
+          case 'm': group.moveError = value === 1; break;
+          case 'f': group.fireError = value === 1; break;
+          default: continue;   /* s / e 是误差倍率，v / g 是垂直长度，本页不建模 */
+        }
+        seen = true;
+        continue;
+      }
+
+      switch (key) {
+        case 'c':
+          if (value >= 0 && value <= 7) {
+            cfg.colorIndex = value;
+            cfg.useCustomColor = false;
+          } else {
+            cfg.useCustomColor = true;   /* c;8 表示颜色自定义，具体色值在 u 里 */
+          }
+          seen = true;
+          break;
+        case 'h': cfg.outlines = value === 1; seen = true; break;
+        case 't': cfg.outlineThickness = clampNumber(Math.round(value), 1, 10); seen = true; break;
+        case 'o': cfg.outlineOpacity = clampNumber(value, 0.05, 1); seen = true; break;
+        case 'd': cfg.centerDot = value === 1; seen = true; break;
+        case 'z': cfg.dotThickness = clampNumber(Math.round(value), 1, 10); seen = true; break;
+        case 'a': cfg.dotOpacity = clampNumber(value, 0.05, 1); seen = true; break;
+        case 'm': cfg.overrideFiringOffset = value === 1; seen = true; break;
+        default: break;
+      }
+    }
+
+    return seen ? cfg : null;
+  }
+
+  /* ============================================================
+   * 准星绘制
+   * expandUnits 返回该组额外向外扩散的游戏单位数
+   * ============================================================ */
+  function buildSegments(cfg, expandUnits) {
+    var segments = [];
+    [cfg.inner, cfg.outer].forEach(function (group) {
+      if (!group || !group.show) return;
+
+      var thickness = Math.max(0, group.thickness) * SCALE;
+      var length = Math.max(0, group.length) * SCALE;
+      if (thickness <= 0 || length <= 0) return;
+
+      var extra = expandUnits ? expandUnits(group) : 0;
+      var offset = Math.max(0, group.offset + extra) * SCALE;
+      var half = thickness / 2;
+
+      /* 上 下 左 右 四条 */
+      segments.push({ x: CENTER - half, y: CENTER - offset - length, w: thickness, h: length, op: group.opacity });
+      segments.push({ x: CENTER - half, y: CENTER + offset, w: thickness, h: length, op: group.opacity });
+      segments.push({ x: CENTER - offset - length, y: CENTER - half, w: length, h: thickness, op: group.opacity });
+      segments.push({ x: CENTER + offset, y: CENTER - half, w: length, h: thickness, op: group.opacity });
+    });
+    return segments;
+  }
+
+  function paint(groupEl, cfg, color, expandUnits) {
+    if (!groupEl) return;
+
+    var segments = buildSegments(cfg, expandUnits);
+    var outlineWidth = cfg.outlines ? Math.max(0, cfg.outlineThickness) * SCALE : 0;
+    var html = [];
+
+    /* 先铺轮廓（向外扩张一圈黑色底），再画线本身，线条尺寸保持不变 */
+    if (outlineWidth > 0) {
+      segments.forEach(function (s) {
+        html.push('<rect x="' + round2(s.x - outlineWidth) + '" y="' + round2(s.y - outlineWidth) +
+          '" width="' + round2(s.w + outlineWidth * 2) + '" height="' + round2(s.h + outlineWidth * 2) +
+          '" fill="#000000" opacity="' + cfg.outlineOpacity + '"/>');
+      });
+    }
+
+    var dot = null;
+    if (cfg.centerDot && cfg.dotThickness > 0) {
+      var size = cfg.dotThickness * SCALE;
+      dot = { x: CENTER - size / 2, y: CENTER - size / 2, w: size, h: size };
+      if (outlineWidth > 0) {
+        html.push('<rect x="' + round2(dot.x - outlineWidth) + '" y="' + round2(dot.y - outlineWidth) +
+          '" width="' + round2(dot.w + outlineWidth * 2) + '" height="' + round2(dot.h + outlineWidth * 2) +
+          '" fill="#000000" opacity="' + cfg.outlineOpacity + '"/>');
+      }
+    }
+
+    segments.forEach(function (s) {
+      html.push('<rect x="' + round2(s.x) + '" y="' + round2(s.y) + '" width="' + round2(s.w) +
+        '" height="' + round2(s.h) + '" fill="' + color + '" opacity="' + s.op + '"/>');
+    });
+
+    if (dot) {
+      html.push('<rect x="' + round2(dot.x) + '" y="' + round2(dot.y) + '" width="' + round2(dot.w) +
+        '" height="' + round2(dot.h) + '" fill="' + color + '" opacity="' + cfg.dotOpacity + '"/>');
+    }
+
+    groupEl.innerHTML = html.join('');
+  }
+
+  /* 误差扩散：只在该组开着对应误差时才向外扩 */
+  function expansionFor(group) {
+    return (group.fireError ? firePulse * 6 : 0) + (group.moveError ? movePulse * 5 : 0);
+  }
+
+  function renderStage() {
+    paint($('#crosshairLayer'), state, activeColor(state), expansionFor);
+  }
+
+  /* ============================================================
+   * 预览背景
+   * ============================================================ */
+  function renderScene() {
+    var layer = $('#sceneLayer');
+    var bgRect = $('#stageBg');
+
+    if (background === 'light') {
+      bgRect.setAttribute('fill', '#c7cfd4');
+      layer.innerHTML = [
+        '<rect x="0" y="0" width="320" height="152" fill="#dde2e6"/>',
+        '<rect x="0" y="152" width="320" height="168" fill="#b6c1c7"/>',
+        '<rect x="22" y="24" width="118" height="176" fill="#cfd6da" opacity="0.85"/>',
+        '<rect x="178" y="38" width="126" height="146" fill="#e4e9ec" opacity="0.9"/>',
+        '<rect x="0" y="268" width="320" height="52" fill="#98a3a9" opacity="0.8"/>',
+        '<rect x="0" y="0" width="320" height="320" fill="url(#vig)" opacity="0.3"/>'
+      ].join('');
+    } else if (background === 'range') {
+      bgRect.setAttribute('fill', '#152330');
+      layer.innerHTML = [
+        '<rect x="0" y="0" width="320" height="320" fill="url(#rgbg)"/>',
+        /* 训练场里的假人：头 + 肩 */
+        '<ellipse cx="160" cy="150" rx="17" ry="19" fill="#c8563f"/>',
+        '<path d="M160 169c-27 0-45 17-49 45l-5 46h108l-5-46c-4-28-22-45-49-45z" fill="#a8412e"/>',
+        '<rect x="0" y="266" width="320" height="54" fill="#0d1a22" opacity="0.78"/>',
+        '<rect x="0" y="0" width="320" height="320" fill="url(#vig)"/>'
+      ].join('');
+    } else {
+      bgRect.setAttribute('fill', '#0d1720');
+      layer.innerHTML = [
+        '<rect x="0" y="0" width="320" height="196" fill="#111e27"/>',
+        '<rect x="0" y="196" width="320" height="124" fill="#0a1218"/>',
+        '<rect x="0" y="0" width="320" height="320" fill="url(#vig)"/>'
+      ].join('');
+    }
+  }
+
+  /* ============================================================
+   * 界面同步
+   * ============================================================ */
+  function displayValue(path, value) {
+    if (/opacity/i.test(path)) return Math.round(value * 100) + '%';
+    return String(value);
+  }
+
+  function syncControls() {
+    $$('[data-bind]').forEach(function (el) {
+      var path = el.dataset.bind;
+      var value = getPath(path);
+      if (el.type === 'checkbox') {
+        el.checked = !!value;
+      } else {
+        el.value = value;
+      }
+      var field = el.closest('.field');
+      var valEl = field ? $('.val', field) : null;
+      if (valEl) valEl.textContent = displayValue(path, value);
+    });
+
+    $$('.swatch').forEach(function (btn, index) {
+      btn.classList.toggle('active', !state.useCustomColor && index === state.colorIndex);
+      btn.setAttribute('aria-pressed', String(!state.useCustomColor && index === state.colorIndex));
+    });
+
+    $('#customColor').value = state.customColor;
+    $('#colorName').textContent = state.useCustomColor
+      ? state.customColor.toUpperCase() + '（自定义）'
+      : PRESET_COLORS[state.colorIndex].name;
+  }
+
+  /* 关掉某个分组的开关后，把组里的滑块一起置灰 */
+  function syncDisabled() {
+    $$('.panel[data-panel]').forEach(function (panel) {
+      var toggle = $('[data-panel-toggle]', panel);
+      if (!toggle) return;
+      $$('input', panel).forEach(function (input) {
+        if (input !== toggle) input.disabled = !toggle.checked;
+      });
+    });
+  }
+
+  function update() {
+    syncDisabled();
+    syncControls();
+    renderStage();
+    $('#codeOut').textContent = buildCode(state);
+  }
+
+  /* ============================================================
+   * 误差动画
+   * ============================================================ */
+  function startLoop() {
+    if (rafId) return;
+    lastTs = 0;
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function tick(ts) {
+    var dt = lastTs ? Math.min(64, ts - lastTs) : 16;
+    lastTs = ts;
+
+    var active = false;
+
+    if (firePulse > 0) {
+      firePulse = Math.max(0, firePulse - dt / 300);
+      active = true;
+    }
+
+    if (Math.abs(movePulse - moveTarget) > 0.002) {
+      movePulse += (moveTarget - movePulse) * Math.min(1, dt / 150);
+      active = true;
+    } else {
+      movePulse = moveTarget;
+    }
+
+    renderStage();
+
+    if (active) {
+      rafId = requestAnimationFrame(tick);
+    } else {
+      rafId = 0;
+      lastTs = 0;
+    }
+  }
+
+  /* ============================================================
+   * 提示条
+   * ============================================================ */
+  var toastTimer = 0;
+  function toast(message) {
+    var el = $('#toast');
+    el.textContent = message;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 1700);
+  }
+
+  function copyText(text, message) {
+    var done = function () { toast(message); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done) {
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.top = '-1000px';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); done(); } catch (e) { toast('复制失败，请手动选中代码'); }
+    document.body.removeChild(area);
+  }
+
+  /* ============================================================
+   * 色板
+   * ============================================================ */
+  function renderSwatches() {
+    var box = $('#swatches');
+    PRESET_COLORS.forEach(function (color, index) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'swatch';
+      btn.style.background = color.hex;
+      btn.title = color.name;
+      btn.setAttribute('aria-label', color.name);
+      btn.addEventListener('click', function () {
+        state.useCustomColor = false;
+        state.colorIndex = index;
+        update();
+      });
+      box.appendChild(btn);
+    });
+  }
+
+  /* ============================================================
+   * 预设卡片
+   * ============================================================ */
+  var PAGE_SIZE = 60;      /* 每批渲染多少张卡片，几百支也不会一次画完 */
+  var allPresets = [];
+  var presetList = [];     /* 当前筛选后的结果 */
+  var presetShown = 0;     /* 已经渲染出来的数量 */
+  var presetCat = 'all';
+  var presetQuery = '';
+
+  function presetMatchesQuery(preset, query) {
+    if (!query) return true;
+    var text = (preset.name + ' ' + preset.desc + ' ' + preset.cat).toLowerCase();
+    return query.toLowerCase().split(/\s+/).every(function (word) {
+      return word === '' || text.indexOf(word) >= 0;
+    });
+  }
+
+  function presetCardHtml(preset, index) {
+    return '<article class="preset">' +
+        '<div class="preset-thumb">' +
+          '<svg viewBox="0 0 320 320" aria-hidden="true">' +
+            '<rect width="320" height="320" fill="#0d1720"/>' +
+            '<g data-thumb="' + index + '"></g>' +
+          '</svg>' +
+        '</div>' +
+        '<div>' +
+          '<h3>' + preset.name + '</h3>' +
+          '<p>' + preset.desc + '</p>' +
+        '</div>' +
+        '<div class="preset-code">' + preset.code + '</div>' +
+        '<div class="preset-foot">' +
+          '<button type="button" class="btn btn-sm btn-primary" data-apply="' + index + '">应用到设计器</button>' +
+          '<button type="button" class="btn btn-sm" data-copy="' + index + '">复制代码</button>' +
+        '</div>' +
+      '</article>';
+  }
+
+  function renderPresetList(reset) {
+    var grid = $('#presetGrid');
+    if (reset) presetShown = PAGE_SIZE;
+
+    presetList = allPresets.filter(function (preset) {
+      if (presetCat !== 'all' && preset.cat !== presetCat) return false;
+      return presetMatchesQuery(preset, presetQuery);
+    });
+
+    var batch = presetList.slice(0, presetShown);
+    grid.innerHTML = batch.map(presetCardHtml).join('');
+
+    /* 只画已经渲染出来的缩略图，翻到哪批画哪批 */
+    $$('[data-thumb]', grid).forEach(function (group) {
+      var preset = presetList[Number(group.getAttribute('data-thumb'))];
+      if (preset) paint(group, preset.cfg, activeColor(preset.cfg), null);
+    });
+
+    $('#presetResult').textContent = presetList.length
+      ? '已显示 ' + batch.length + ' / ' + presetList.length + ' 支'
+      : '没有匹配的准星，换个关键词试试';
+    $('#presetMoreWrap').hidden = batch.length >= presetList.length;
+  }
+
+  /* 分类按钮：数字直接从数据里统计，永远和实际数量一致 */
+  function renderPresetFilters() {
+    var filter = $('#presetFilter');
+    filter.innerHTML = '';
+    PRESET_CATS.forEach(function (cat) {
+      var count = cat.id === 'all'
+        ? allPresets.length
+        : allPresets.filter(function (item) { return item.cat === cat.id; }).length;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'filter-btn' + (cat.id === presetCat ? ' active' : '');
+      btn.setAttribute('aria-pressed', String(cat.id === presetCat));
+      btn.textContent = cat.name + ' · ' + count;
+      btn.addEventListener('click', function () {
+        presetCat = cat.id;
+        $$('.filter-btn', filter).forEach(function (other) {
+          other.classList.toggle('active', other === btn);
+          other.setAttribute('aria-pressed', String(other === btn));
+        });
+        renderPresetList(true);
+      });
+      filter.appendChild(btn);
+    });
+  }
+
+  function renderPresets() {
+    allPresets = buildAllPresets();
+    $('#presetCount').textContent = allPresets.length;
+    renderPresetFilters();
+    renderPresetList(true);
+
+    $('#presetSearch').addEventListener('input', function () {
+      presetQuery = this.value.trim();
+      renderPresetList(true);
+    });
+
+    $('#presetMore').addEventListener('click', function () {
+      presetShown += PAGE_SIZE;
+      renderPresetList(false);
+    });
+
+    $('#presetGrid').addEventListener('click', function (event) {
+      var applyBtn = event.target.closest('[data-apply]');
+      if (applyBtn) {
+        var preset = presetList[Number(applyBtn.dataset.apply)];
+        if (!preset) return;
+        state = clone(preset.cfg);
+        update();
+        toast('已应用：' + preset.name);
+        var designer = document.getElementById('designer');
+        /* 滚动到设计器，部分环境（如无头模拟器）没有这个方法，做个降级 */
+        if (designer && designer.scrollIntoView) {
+          designer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+      var copyBtn = event.target.closest('[data-copy]');
+      if (copyBtn) {
+        var target = presetList[Number(copyBtn.dataset.copy)];
+        if (!target) return;
+        copyText(target.code, '已复制该预设的分享码');
+      }
+    });
+  }
+
+  /* ============================================================
+   * 后端联动（可选）
+   * API_BASE 留空时，短链和热门榜整体隐藏，页面依旧是零依赖的单文件工具；
+   * 配了地址才会去请求接口，而且所有请求失败都静默降级，不影响本地功能。
+   * ============================================================ */
+  var API_BASE = 'https://crosshair-lab-api.ll20041007.workers.dev';        /* 部署完 Worker 之后填在这里，例如 https://crosshair-lab-api.xxx.workers.dev */
+  var sourceShareId = '';   /* 如果是从短链进来的，记下短链 ID，用来回传「套用 / 复制」事件 */
+
+  /* 只有配了地址、并且运行环境真的有 fetch 时才启用后端功能，缺一样就整体降级 */
+  function apiEnabled() { return !!API_BASE && typeof fetch === 'function'; }
+
+  function apiPath(path) { return API_BASE.replace(/\/+$/, '') + path; }
+
+  function apiRequest(path, options) {
+    return fetch(apiPath(path), options).then(function (response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    });
+  }
+
+  function reportEvent(type) {
+    if (!apiEnabled() || !sourceShareId) return;
+    apiRequest('/api/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: sourceShareId, type: type })
+    }).catch(function () { /* 埋点失败不影响任何功能，静默忽略 */ });
+  }
+
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  }
+
+  function currentSummary() {
+    var color = state.useCustomColor ? '自定义色' : PRESET_COLORS[state.colorIndex].name;
+    return color + '准星';
+  }
+
+  /* 把当前准星存到后端，换回一条 6 位短链 */
+  function shortenCurrent() {
+    var msg = $('#shortenMsg');
+    msg.textContent = '正在生成…';
+    apiRequest('/api/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: buildCode(state), name: currentSummary() })
+    }).then(function (data) {
+      $('#shortenLink').textContent = apiPath('/s/' + data.id);
+      $('#shortenResult').hidden = false;
+      msg.textContent = '短链已生成，别人打开就是这支准星';
+      toast('短链已生成');
+    }).catch(function () {
+      msg.textContent = '生成失败，检查网络或后端地址';
+    });
+  }
+
+  /* 热门榜：后台按打开数和套用数排序 */
+  function loadRanking() {
+    apiRequest('/api/top?limit=8').then(function (data) {
+      var items = data.items || [];
+      if (!items.length) return;
+
+      var box = $('#rankList');
+      box.innerHTML = items.map(function (item, index) {
+        return '<article class="rank-item">' +
+            '<div class="rank-head">' +
+              '<span class="rank-no">#' + (index + 1) + '</span>' +
+              '<span class="rank-name">' + escapeHtml(item.name || '未命名准星') + '</span>' +
+            '</div>' +
+            '<div class="rank-stat">打开 ' + item.hits + ' · 套用 ' + item.applies + ' · 复制 ' + item.copies + '</div>' +
+            '<button type="button" class="btn btn-sm btn-primary" data-rank="' + escapeHtml(item.code) + '">套用这支</button>' +
+          '</article>';
+      }).join('');
+      $('#hot').hidden = false;
+
+      box.addEventListener('click', function (event) {
+        var btn = event.target.closest('[data-rank]');
+        if (!btn) return;
+        var cfg = decodeConfig(btn.getAttribute('data-rank'));
+        if (!cfg) { toast('这串分享码解析不了'); return; }
+        state = cfg;
+        update();
+        toast('已套用热门准星');
+        var designer = document.getElementById('designer');
+        if (designer && designer.scrollIntoView) {
+          designer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    }).catch(function () { /* 后端不可用就不显示这一块 */ });
+  }
+
+  /* 打开短链时地址栏会带 ?c=分享码&s=短链ID */
+  function applyFromUrl() {
+    var params = new URLSearchParams(location.search);
+    var shareId = params.get('s');
+    var code = params.get('c');
+
+    if (shareId && /^[0-9a-z]{6}$/.test(shareId)) sourceShareId = shareId;
+    if (!code) return;
+
+    var cfg = decodeConfig(code);
+    if (!cfg) { toast('链接里的分享码解析失败'); return; }
+
+    state = cfg;
+    update();
+    toast('已从分享链接载入准星');
+    reportEvent('apply');
+  }
+
+  function setupBackend() {
+    applyFromUrl();
+    if (!apiEnabled()) return;
+
+    $('#shareActions').hidden = false;
+    $('#shortenBtn').addEventListener('click', shortenCurrent);
+    $('#copyLinkBtn').addEventListener('click', function () {
+      copyText($('#shortenLink').textContent, '短链已复制');
+    });
+    loadRanking();
+  }
+
+  /* ============================================================
+   * 随机与重置
+   * ============================================================ */
+  function randInt(min, max) {
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  function pick(list) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function randomize() {
+    var next = clone(DEFAULT_STATE);
+    next.colorIndex = randInt(0, 7);
+    next.useCustomColor = false;
+    next.outlines = Math.random() > 0.35;
+    next.outlineOpacity = pick([0.5, 0.75, 1]);
+    next.outlineThickness = pick([1, 1, 2]);
+    next.centerDot = Math.random() > 0.5;
+    next.dotThickness = randInt(1, 3);
+    next.dotOpacity = 1;
+    next.inner = {
+      show: Math.random() > 0.15, opacity: pick([0.8, 1]), length: randInt(1, 6),
+      thickness: randInt(1, 3), offset: randInt(0, 4), moveError: false, fireError: false
+    };
+    next.outer = {
+      show: Math.random() > 0.6, opacity: pick([0.3, 0.5, 0.8]), length: randInt(1, 3),
+      thickness: randInt(1, 3), offset: randInt(6, 14), moveError: false, fireError: false
+    };
+    state = next;
+    update();
+    toast('随机生成完成，不喜欢就再点一次');
+  }
+
+  /* ============================================================
+   * 事件绑定
+   * ============================================================ */
+  function bind() {
+    /* 所有滑块与开关 */
+    $$('[data-bind]').forEach(function (el) {
+      var handler = function () {
+        var path = el.dataset.bind;
+        var value;
+        if (el.type === 'checkbox') value = el.checked;
+        else if (el.type === 'range' || el.type === 'number') value = parseFloat(el.value);
+        else value = el.value;
+        setPath(path, value);
+        update();
+      };
+      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
+    });
+
+    /* 自定义颜色 */
+    $('#customColor').addEventListener('input', function () {
+      state.useCustomColor = true;
+      state.customColor = this.value.toUpperCase();
+      update();
+    });
+
+    /* 背景切换 */
+    $$('[data-bg]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        background = btn.dataset.bg;
+        $$('[data-bg]').forEach(function (other) {
+          other.classList.toggle('active', other === btn);
+        });
+        renderScene();
+      });
+    });
+
+    /* 模拟开火 / 模拟移动 */
+    $('#fireBtn').addEventListener('click', function () {
+      firePulse = 1;
+      startLoop();
+    });
+
+    $('#moveToggle').addEventListener('change', function () {
+      moveTarget = this.checked ? 1 : 0;
+      startLoop();
+    });
+
+    /* 复制、随机、重置 */
+    $('#copyBtn').addEventListener('click', function () {
+      copyText($('#codeOut').textContent, '分享码已复制，去游戏里导入吧');
+      reportEvent('copy');
+    });
+
+    $('#randomBtn').addEventListener('click', randomize);
+
+    $('#resetBtn').addEventListener('click', function () {
+      state = clone(DEFAULT_STATE);
+      update();
+      toast('已恢复游戏默认准星');
+    });
+  }
+
+  /* ============================================================
+   * 初始化
+   * ============================================================ */
+  renderSwatches();
+  renderPresets();
+  bind();
+  renderScene();
+  update();
+  setupBackend();
+})();
+</script>
+</body>
+</html>

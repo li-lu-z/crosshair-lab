@@ -1,0 +1,13 @@
+{
+  "name": "crosshair-lab-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "准星实验室的后端 API：短链分享、埋点计数、热门榜",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node test/api.test.js",
+    "schema": "wrangler d1 execute crosshair-lab --remote --file=./schema.sql"
+  }
+}

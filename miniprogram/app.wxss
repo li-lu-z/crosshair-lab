@@ -1,0 +1,79 @@
+/* 全局样式：深色底，和网页版保持一致的观感 */
+page {
+  background: #0a1016;
+  color: #e8f0f6;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.wrap {
+  padding: 24rpx 24rpx 60rpx;
+}
+
+/* 卡片 */
+.card {
+  background: #121c24;
+  border: 1rpx solid #22323e;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.muted {
+  color: #8ea3b4;
+  font-size: 24rpx;
+}
+
+.tiny {
+  color: #6c8090;
+  font-size: 22rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mono {
+  font-family: Consolas, Menlo, monospace;
+}
+
+/* 主按钮 */
+.btn-main {
+  background: #ff4655;
+  color: #ffffff;
+  font-size: 26rpx;
+  border-radius: 14rpx;
+  padding: 0 28rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  margin: 0;
+}
+
+.btn-plain {
+  background: #16222c;
+  color: #e8f0f6;
+  font-size: 26rpx;
+  border-radius: 14rpx;
+  padding: 0 28rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  margin: 0;
+}
+
+.btn-main::after,
+.btn-plain::after {
+  border: none;
+}

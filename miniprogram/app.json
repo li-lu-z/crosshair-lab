@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "无畏契约准星实验室",
+    "navigationBarBackgroundColor": "#0a1016",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0a1016",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

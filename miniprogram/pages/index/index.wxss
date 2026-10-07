@@ -1,0 +1,218 @@
+/* 首页样式：深色竞速风，和网页版保持一致 */
+
+.mt {
+  margin-top: 16rpx;
+}
+
+.gap {
+  gap: 16rpx;
+}
+
+/* ---------- 预览区 ---------- */
+.seg {
+  display: flex;
+  background: #16222c;
+  border: 1rpx solid #22323e;
+  border-radius: 12rpx;
+  padding: 4rpx;
+}
+
+.seg-item {
+  padding: 6rpx 20rpx;
+  font-size: 24rpx;
+  color: #8ea3b4;
+  border-radius: 10rpx;
+}
+
+.seg-item.on {
+  background: #1c2b36;
+  color: #e8f0f6;
+}
+
+.mini-btn {
+  padding: 8rpx 22rpx;
+  border-radius: 10rpx;
+  background: #16222c;
+  border: 1rpx solid #22323e;
+  font-size: 24rpx;
+  color: #e8f0f6;
+  flex: none;
+}
+
+/* 正方形预览区：padding-bottom 撑出高度，准星用绝对定位的方块拼出来 */
+.stage {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-top: 16rpx;
+}
+
+.abs {
+  position: absolute;
+}
+
+/* 靶场背景里的假人：头 + 肩 */
+.dummy-head {
+  position: absolute;
+  left: 41.5%;
+  top: 38%;
+  width: 17%;
+  height: 19%;
+  border-radius: 50%;
+  background: #c8563f;
+}
+
+.dummy-body {
+  position: absolute;
+  left: 29%;
+  top: 54%;
+  width: 42%;
+  height: 46%;
+  border-radius: 22% 22% 0 0;
+  background: #a8412e;
+}
+
+.code-box {
+  margin-top: 16rpx;
+  background: #080e13;
+  border: 1rpx solid #22323e;
+  border-radius: 12rpx;
+  padding: 16rpx;
+}
+
+.code {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  line-height: 1.6;
+  color: #8ff0d8;
+  word-break: break-all;
+  font-family: Consolas, Menlo, monospace;
+}
+
+/* ---------- 颜色 ---------- */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 12rpx;
+}
+
+.swatch {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  margin: 0 16rpx 16rpx 0;
+  border: 1rpx solid rgba(255, 255, 255, 0.16);
+}
+
+.swatch.on {
+  box-shadow: 0 0 0 4rpx #ff4655;
+}
+
+/* ---------- 参数 ---------- */
+.field {
+  margin-top: 10rpx;
+}
+
+.val {
+  color: #2fd6c6;
+  font-size: 24rpx;
+  font-family: Consolas, Menlo, monospace;
+}
+
+/* ---------- 预设库 ---------- */
+.cats {
+  white-space: nowrap;
+  margin: 16rpx 0 4rpx;
+}
+
+.cat {
+  display: inline-block;
+  padding: 8rpx 22rpx;
+  margin-right: 14rpx;
+  border-radius: 999rpx;
+  background: #16222c;
+  color: #8ea3b4;
+  font-size: 24rpx;
+}
+
+.cat.on {
+  background: #ff4655;
+  color: #ffffff;
+}
+
+.search {
+  height: 72rpx;
+  padding: 0 20rpx;
+  margin: 12rpx 0;
+  background: #0a1116;
+  border: 1rpx solid #22323e;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: #e8f0f6;
+}
+
+.ph {
+  color: #6c8090;
+}
+
+.pcard {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+  padding: 16rpx;
+  background: #0f1a22;
+  border: 1rpx solid #1e2c37;
+  border-radius: 14rpx;
+}
+
+/* 缩略图固定 64px，和 index.js 里的 THUMB_BOX 对应 */
+.thumb {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex: none;
+  background: #0d1720;
+  border-radius: 10rpx;
+  overflow: hidden;
+}
+
+.pinfo {
+  flex: 1;
+  margin: 0 16rpx;
+  overflow: hidden;
+}
+
+.pname {
+  display: block;
+  font-size: 26rpx;
+  color: #e8f0f6;
+  margin-bottom: 4rpx;
+}
+
+.more {
+  margin-top: 24rpx;
+  padding: 20rpx;
+  text-align: center;
+  border: 1rpx dashed #2b3d4a;
+  border-radius: 14rpx;
+  color: #8ea3b4;
+  font-size: 26rpx;
+}
+
+/* ---------- 轻提示 ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 120rpx;
+  transform: translateX(-50%);
+  background: #1c2b36;
+  border: 1rpx solid #22323e;
+  color: #e8f0f6;
+  padding: 14rpx 28rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  z-index: 99;
+}

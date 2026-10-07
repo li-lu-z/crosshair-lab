@@ -1,0 +1,23 @@
+{
+  // 部署前把 database_id 换成你自己 npx wrangler d1 create 出来的值
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "crosshair-lab-api",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-01",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    // 短链跳回哪个站点。换成你自己的域名即可
+    "SITE_BASE": "https://valorant-crosshair.pages.dev",
+    // 允许跨域的前端来源，多个用英文逗号分隔；留空表示不限制
+    "ALLOWED_ORIGINS": "https://valorant-crosshair.pages.dev"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "crosshair-lab",
+      "database_id": "c93b8367-038b-4920-9150-6937bc788853"
+    }
+  ]
+}

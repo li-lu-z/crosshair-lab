@@ -1,0 +1,123 @@
+<view class="wrap">
+
+  <!-- ============ 预览区 ============ -->
+  <view class="card">
+    <view class="row-between">
+      <view class="seg">
+        <view class="seg-item {{sceneKey === 'dark' ? 'on' : ''}}" data-key="dark" bindtap="onScene">深色</view>
+        <view class="seg-item {{sceneKey === 'light' ? 'on' : ''}}" data-key="light" bindtap="onScene">亮色</view>
+        <view class="seg-item {{sceneKey === 'range' ? 'on' : ''}}" data-key="range" bindtap="onScene">靶场</view>
+      </view>
+      <view class="mini-btn" bindtap="onFire">模拟开火</view>
+    </view>
+
+    <view class="stage" style="background:{{scene.bg}}">
+      <view wx:if="{{scene.target}}" class="dummy-head"></view>
+      <view wx:if="{{scene.target}}" class="dummy-body"></view>
+      <view class="abs" wx:for="{{lines}}" wx:key="id" style="{{item.style}}"></view>
+      <view wx:if="{{dot}}" class="abs" style="{{dot.style}}"></view>
+    </view>
+
+    <view class="row-between mt">
+      <view>
+        <text class="muted">扩散预览</text>
+        <view><text class="tiny">打开后准星按误差倍率外扩，预览移动和开火的样子</text></view>
+      </view>
+      <switch checked="{{spreading}}" bindchange="onSpread" color="#ff4655" />
+    </view>
+
+    <view class="code-box">
+      <view class="row-between">
+        <text class="tiny">准星分享码</text>
+        <view class="mini-btn" bindtap="onCopy">复制</view>
+      </view>
+      <text class="code">{{code}}</text>
+    </view>
+
+    <view class="row gap mt">
+      <view class="mini-btn" bindtap="onRandom">随机一支</view>
+      <view class="mini-btn" bindtap="onReset">恢复游戏默认</view>
+    </view>
+  </view>
+
+  <!-- ============ 颜色 ============ -->
+  <view class="card">
+    <view class="row-between">
+      <text class="card-title">颜色</text>
+      <text class="muted">{{flat.useCustomColor ? '自定义色' : colors[flat.colorIndex].name}}</text>
+    </view>
+    <view class="swatches">
+      <view class="swatch {{(!flat.useCustomColor && flat.colorIndex === index) ? 'on' : ''}}"
+            wx:for="{{colors}}" wx:key="name"
+            style="background:{{item.hex}}"
+            data-index="{{index}}" bindtap="onColor"></view>
+    </view>
+    <text class="tiny">自定义色只出现在部分预设里，套用后同样能生成分享码</text>
+  </view>
+
+  <!-- ============ 参数面板 ============ -->
+  <view class="card" wx:for="{{panels}}" wx:for-item="panel" wx:key="id">
+    <view class="row-between">
+      <text class="card-title">{{panel.title}}</text>
+      <view class="row gap" wx:if="{{panel.toggle}}">
+        <text class="tiny">{{panel.toggleLabel}}</text>
+        <switch checked="{{flat[panel.toggle]}}" data-key="{{panel.toggle}}" bindchange="onSwitch" color="#ff4655" />
+      </view>
+    </view>
+    <text class="tiny" wx:if="{{panel.note}}">{{panel.note}}</text>
+
+    <block wx:if="{{!panel.toggle || flat[panel.toggle]}}">
+      <view class="field" wx:for="{{panel.fields}}" wx:for-item="field" wx:key="key">
+        <view class="row-between">
+          <text class="muted">{{field.label}}</text>
+          <text class="val">{{display[field.key]}}</text>
+        </view>
+        <slider value="{{flat[field.key]}}"
+                min="{{field.min}}" max="{{field.max}}" step="{{field.step}}"
+                data-key="{{field.key}}" bindchange="onSlide"
+                activeColor="#ff4655" backgroundColor="#22323e" block-size="18"></slider>
+      </view>
+
+      <view class="field row-between" wx:for="{{panel.switches}}" wx:for-item="sw" wx:key="key">
+        <text class="muted">{{sw.label}}</text>
+        <switch checked="{{flat[sw.key]}}" data-key="{{sw.key}}" bindchange="onSwitch" color="#ff4655" />
+      </view>
+    </block>
+  </view>
+
+  <!-- ============ 预设库 ============ -->
+  <view class="card">
+    <view class="row-between">
+      <text class="card-title">预设准星库</text>
+      <text class="muted">{{total}} 支</text>
+    </view>
+
+    <scroll-view class="cats" scroll-x="{{true}}" enable-flex>
+      <view class="cat {{cat === item.id ? 'on' : ''}}"
+            wx:for="{{cats}}" wx:key="id"
+            data-id="{{item.id}}" bindtap="onCat">{{item.name}} · {{item.count}}</view>
+    </scroll-view>
+
+    <input class="search" value="{{query}}" bindinput="onSearch"
+           placeholder="搜索颜色、形状或特征" placeholder-class="ph"
+           confirm-type="search" />
+
+    <text class="tiny">{{resultText}}</text>
+
+    <view class="pcard" wx:for="{{list}}" wx:key="code" data-index="{{index}}" bindtap="onApply">
+      <view class="thumb">
+        <view class="abs" wx:for="{{item.thumb}}" wx:for-item="line" wx:key="id" style="{{line.style}}"></view>
+      </view>
+      <view class="pinfo">
+        <text class="pname">{{item.name}}</text>
+        <text class="tiny">{{item.desc}}</text>
+      </view>
+      <view class="mini-btn" data-index="{{index}}" catchtap="onCopyPreset">复制</view>
+    </view>
+
+    <view class="more" wx:if="{{hasMore}}" bindtap="onMore">显示更多准星</view>
+  </view>
+
+</view>
+
+<view class="toast" wx:if="{{copyTip}}">{{copyTip}}</view>
